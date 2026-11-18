@@ -1,0 +1,30 @@
+// Fotos web en fotos/web/NN.jpg. Precio provisional 100 EUR. 'pago' = enlace Stripe/PayPal por cuadro.
+const OBRAS = [
+  {"id": 1, "titulo": "Ojos de selva", "precio": 100, "estado": "disponible", "foto": "fotos/web/01.jpg", "color": "#222", "desc": "Dos ojos oscuros con pupila azul sobre verdes y amarillos en relieve.", "pago": "#"},
+  {"id": 2, "titulo": "Corazón de ceniza", "precio": 100, "estado": "disponible", "foto": "fotos/web/02.jpg", "color": "#222", "desc": "Pouring rojo y blanco con forma de corazón sobre un fondo humeante.", "pago": "#"},
+  {"id": 3, "titulo": "Aurora", "precio": 100, "estado": "disponible", "foto": "fotos/web/03.jpg", "color": "#222", "desc": "Barridos de turquesa, rosa y amarillo que giran como una aurora.", "pago": "#"},
+  {"id": 4, "titulo": "Tormenta violeta", "precio": 100, "estado": "disponible", "foto": "fotos/web/04.jpg", "color": "#222", "desc": "Hilos negros y blancos salpicados sobre violetas y magentas.", "pago": "#"},
+  {"id": 5, "titulo": "Bosque de relámpagos", "precio": 100, "estado": "disponible", "foto": "fotos/web/05.jpg", "color": "#222", "desc": "Trazos blancos y violetas que brotan de un verde profundo.", "pago": "#"},
+  {"id": 6, "titulo": "Vela al viento", "precio": 100, "estado": "disponible", "foto": "fotos/web/06.jpg", "color": "#222", "desc": "Pinceladas negras y amarillas que recuerdan velas y olas.", "pago": "#"},
+  {"id": 7, "titulo": "Criatura del crepúsculo", "precio": 100, "estado": "disponible", "foto": "fotos/web/07.jpg", "color": "#222", "desc": "Formas de ave sobre un fondo de granates, amarillos y azul noche.", "pago": "#"},
+  {"id": 8, "titulo": "Cruce de caminos", "precio": 100, "estado": "disponible", "foto": "fotos/web/08.jpg", "color": "#222", "desc": "Una gran X roja y blanca sobre negro y amarillo.", "pago": "#"},
+  {"id": 9, "titulo": "Cascada de hielo", "precio": 100, "estado": "disponible", "foto": "fotos/web/09.jpg", "color": "#222", "desc": "Pouring en azules y blancos con salpicaduras negras.", "pago": "#"},
+  {"id": 10, "titulo": "Constelación", "precio": 100, "estado": "disponible", "foto": "fotos/web/10.jpg", "color": "#222", "desc": "Salpicaduras blancas sobre un negro absoluto.", "pago": "#"},
+  {"id": 11, "titulo": "Fuego en el cielo", "precio": 100, "estado": "disponible", "foto": "fotos/web/11.jpg", "color": "#222", "desc": "Rojo vivo y trazos negros sobre un fondo azul lavanda.", "pago": "#"},
+  {"id": 12, "titulo": "Relámpago sobre el mar", "precio": 100, "estado": "disponible", "foto": "fotos/web/12.jpg", "color": "#222", "desc": "Verdes y azules atravesados por un trazo negro, rojo y marfil.", "pago": "#"},
+  {"id": 13, "titulo": "Órbitas", "precio": 100, "estado": "disponible", "foto": "fotos/web/13.jpg", "color": "#222", "desc": "Espirales negras sobre rayas azules, blancas y rojas.", "pago": "#"},
+  {"id": 14, "titulo": "Lluvia sobre el océano", "precio": 100, "estado": "disponible", "foto": "fotos/web/14.jpg", "color": "#222", "desc": "Azul eléctrico con gotas blancas que caen.", "pago": "#"},
+  {"id": 15, "titulo": "Piano de medianoche", "precio": 100, "estado": "disponible", "foto": "fotos/web/15.jpg", "color": "#222", "desc": "Blancos y ocres rayados sobre negro.", "pago": "#"},
+  {"id": 16, "titulo": "Isla de coral", "precio": 100, "estado": "disponible", "foto": "fotos/web/16.jpg", "color": "#222", "desc": "Una mancha rosada de pouring flotando en un mar azul petróleo.", "pago": "#"},
+  {"id": 17, "titulo": "Jungla eléctrica", "precio": 100, "estado": "disponible", "foto": "fotos/web/17.jpg", "color": "#222", "desc": "Líneas azules, blancas y amarillas sobre un fondo verde.", "pago": "#"},
+  {"id": 18, "titulo": "Explosión de otoño", "precio": 100, "estado": "disponible", "foto": "fotos/web/18.jpg", "color": "#222", "desc": "Pouring cobrizo con salpicaduras negras y rosas sobre blanco.", "pago": "#"},
+  {"id": 19, "titulo": "Hipnosis", "precio": 100, "estado": "disponible", "foto": "fotos/web/19.jpg", "color": "#222", "desc": "Espirales negras y verde pálido sobre fondo salmón.", "pago": "#"},
+  {"id": 20, "titulo": "Arcoíris roto", "precio": 100, "estado": "disponible", "foto": "fotos/web/20.jpg", "color": "#222", "desc": "Degradado arcoíris cruzado por tinta negra salpicada.", "pago": "#"},
+  {"id": 21, "titulo": "Cortina roja", "precio": 100, "estado": "disponible", "foto": "fotos/web/21.jpg", "color": "#222", "desc": "Franjas blancas que caen sobre un fondo carmesí.", "pago": "#"},
+  {"id": 22, "titulo": "Ciudad de neón", "precio": 100, "estado": "disponible", "foto": "fotos/web/22.jpg", "color": "#222", "desc": "Goteos rojos, azules y dorados sobre un fondo ahumado.", "pago": "#"},
+  {"id": 23, "titulo": "Barrotes", "precio": 100, "estado": "disponible", "foto": "fotos/web/23.jpg", "color": "#222", "desc": "Chorros negros sobre un rojo intenso.", "pago": "#"},
+  {"id": 24, "titulo": "Mano rosa", "precio": 100, "estado": "disponible", "foto": "fotos/web/24.jpg", "color": "#222", "desc": "Mano estilo pop en rosa sobre verde botella.", "pago": "#"},
+  {"id": 25, "titulo": "Pie rosa", "precio": 100, "estado": "disponible", "foto": "fotos/web/25.jpg", "color": "#222", "desc": "Pie estilo pop en rosa sobre verde botella.", "pago": "#"},
+  {"id": 26, "titulo": "Caos de paleta", "precio": 100, "estado": "disponible", "foto": "fotos/web/26.jpg", "color": "#222", "desc": "Capas de pintura de todos los colores, mezcladas y salpicadas.", "pago": "#"}
+];
+const DETALLE = "Acrílico sobre lienzo · 50x50 cm · Pieza única · Firmado";

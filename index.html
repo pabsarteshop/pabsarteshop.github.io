@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pablo · Acrílicos abstractos y fluidos</title>
+<meta name="description" content="Cuadros acrílicos abstractos y fluidos de 50x50 cm. Piezas únicas, hechas a mano.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a class="logo" href="#">Pablo<span>acrílicos</span></a>
+  <nav><a href="#obras">Obras</a><a href="#sobre">Sobre mí</a><a href="#envios">Envíos</a><a href="#contacto">Contacto</a></nav>
+</header>
+
+<section class="hero">
+  <h1>Arte fluido, una pieza a la vez</h1>
+  <p>Cuadros acrílicos abstractos de 50x50 cm. Cada uno es único y no se repite.</p>
+  <a class="btn" href="#obras">Ver obras</a>
+</section>
+
+<section id="obras">
+  <h2>Obras</h2>
+  <div class="filtros">
+    <button data-f="todas" class="on">Todas</button>
+    <button data-f="disponible">Disponibles</button>
+    <button data-f="vendido">Vendidas</button>
+  </div>
+  <div id="galeria" class="grid"></div>
+</section>
+
+<section id="sobre" class="narrow">
+  <h2>Sobre mí</h2>
+  <p>Soy Pablo, una persona curiosa con intereses múltiples. Uso la pintura como forma de expresar lo que siento, y cada cuadro marca un momento de mi vida. Sin dolor no hay crecimiento.</p>
+</section>
+
+<section id="envios" class="narrow">
+  <h2>Envíos y devoluciones</h2>
+  <ul>
+    <li>Envío a España peninsular: tarifa fija de 12 €, embalaje protegido.</li>
+    <li>Plazo de envío: 3 a 5 días laborables tras el pago.</li>
+    <li>Devolución en 14 días naturales desde la recepción (derecho de desistimiento UE). El cliente paga el envío de vuelta.</li>
+    <li>Las fotos pueden variar ligeramente del color real según la pantalla.</li>
+  </ul>
+</section>
+
+<section id="contacto" class="narrow">
+  <h2>Contacto</h2>
+  <p>Escríbeme a <a href="mailto:pabalca@gmail.com">pabalca@gmail.com</a> o por Instagram: <a href="https://instagram.com/pabsarte" target="_blank" rel="noopener">@pabsarte</a>.</p>
+</section>
+
+<footer>
+  <p>© <span id="y"></span> Pablo. Todos los derechos reservados.</p>
+  <p><a href="aviso-legal.html">Aviso legal</a> · <a href="privacidad.html">Privacidad</a> · <a href="condiciones.html">Condiciones de venta</a></p>
+</footer>
+
+<div id="modal" class="modal" hidden>
+  <div class="box">
+    <button class="x" aria-label="Cerrar">×</button>
+    <div id="m-img" class="img big"></div>
+    <div class="info">
+      <h3 id="m-titulo"></h3>
+      <p id="m-det" class="det"></p>
+      <p id="m-desc"></p>
+      <p class="precio" id="m-precio"></p>
+      <a id="m-btn" class="btn" href="#">Comprar</a>
+    </div>
+  </div>
+</div>
+
+<script src="obras.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

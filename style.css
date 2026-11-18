@@ -1,0 +1,40 @@
+:root{--bg:#0f0f12;--fg:#ececf1;--mute:#9a9aa6;--acc:#4ec9b0;--card:#18181d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 Georgia,serif}
+a{color:var(--acc)}
+header{display:flex;justify-content:space-between;align-items:center;padding:18px 5vw;position:sticky;top:0;background:#0f0f12ee;backdrop-filter:blur(6px);z-index:5}
+.logo{font-size:1.3rem;color:var(--fg);text-decoration:none;font-weight:bold}
+.logo span{color:var(--acc);font-weight:normal;margin-left:.4em;font-size:.8em}
+nav a{margin-left:1.4em;color:var(--mute);text-decoration:none;font-family:system-ui,sans-serif;font-size:.9rem}
+nav a:hover{color:var(--fg)}
+.hero{text-align:center;padding:12vh 5vw 8vh}
+.hero h1{font-size:clamp(2rem,6vw,3.6rem);margin:0 0 .4em;font-weight:normal}
+.hero p{color:var(--mute);max-width:36em;margin:0 auto 1.6em}
+.btn{display:inline-block;background:var(--acc);color:#07110f;padding:.7em 1.6em;border-radius:999px;text-decoration:none;font-family:system-ui,sans-serif;font-weight:600;border:0;cursor:pointer}
+.btn.off{background:#333;color:#888;pointer-events:none}
+section{padding:6vh 5vw}
+section h2{font-weight:normal;font-size:1.8rem;margin:0 0 1em}
+.narrow{max-width:46em;margin:0 auto}
+.filtros{margin-bottom:1.5em}
+.filtros button{background:none;border:1px solid #333;color:var(--mute);padding:.4em 1em;border-radius:999px;margin-right:.5em;cursor:pointer;font-family:system-ui,sans-serif}
+.filtros .on{border-color:var(--acc);color:var(--acc)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:24px}
+.card{background:var(--card);border-radius:10px;overflow:hidden;cursor:pointer;transition:transform .2s}
+.card:hover{transform:translateY(-4px)}
+.img{aspect-ratio:1/1;background-size:cover;background-position:center;position:relative}
+.card .meta{padding:14px 16px;display:flex;justify-content:space-between;align-items:baseline;font-family:system-ui,sans-serif}
+.card h3{margin:0;font-size:1rem;font-weight:600}
+.card .p{color:var(--acc)}
+.tag{position:absolute;top:10px;left:10px;background:#000a;padding:.2em .8em;border-radius:999px;font-size:.75rem;font-family:system-ui,sans-serif}
+.vendido .img{filter:grayscale(.5) brightness(.7)}
+.vendido .p{color:var(--mute);text-decoration:line-through}
+footer{text-align:center;padding:5vh 5vw;color:var(--mute);font-size:.85rem;border-top:1px solid #222;margin-top:6vh}
+.modal{position:fixed;inset:0;background:#000d;display:flex;align-items:center;justify-content:center;padding:4vw;z-index:10}
+.modal[hidden]{display:none}
+.box{background:var(--card);border-radius:12px;max-width:900px;width:100%;display:grid;grid-template-columns:1fr 1fr;position:relative;overflow:hidden}
+.box .info{padding:28px;font-family:system-ui,sans-serif}
+.box h3{font-family:Georgia,serif;font-size:1.6rem;margin:0 0 .3em;font-weight:normal}
+.det{color:var(--mute);font-size:.9rem}
+.precio{font-size:1.5rem;color:var(--acc)}
+.x{position:absolute;right:10px;top:6px;background:none;border:0;color:#fff;font-size:2rem;cursor:pointer;z-index:2}
+@media(max-width:700px){.box{grid-template-columns:1fr}nav a{margin-left:.8em}}
