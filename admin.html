@@ -110,6 +110,10 @@ async function gh(path, opts={}){
   return j;
 }
 const b64dec = s => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g,"")), c=>c.charCodeAt(0)));
+async function puedeEscribir(){
+  try{ await gh("/git/blobs", {method:"POST", body:JSON.stringify({content:"comprobacion", encoding:"utf-8"})}); }
+  catch(err){ throw new Error("El token de GitHub no puede escribir en la web. Crea uno con acceso al repositorio pabsarteshop.github.io y permiso Contents: Read and write. ("+err.message+")"); }
+}
 async function leerArchivo(p){ const j = await gh("/contents/"+p+"?ref="+BRANCH); return b64dec(j.content); }
 
 // ---------- Stripe ----------
@@ -249,7 +253,7 @@ async function sincronizarStripe(o, og){
     o.stripe_price = pr.id; precioNuevo = true;
     log("Stripe: precio de \""+o.titulo+"\" cambiado a "+o.precio+" €.");
   }
-  if(visible && (!o.stripe_link || precioNuevo || !eraVisible)){
+  if(visible && (!o.stripe_link || precioNuevo || (og && !eraVisible))){
     const viejo = o.stripe_link;
     const l = await crearEnlace(o.stripe_price, o.id);
     o.stripe_link = l.id; o.pago = l.url;
@@ -269,6 +273,8 @@ async function publicar(){
   }
   $("#b-publicar").disabled = true; $("#b-descartar").disabled = true;
   try{
+    estado("Comprobando el acceso a GitHub…");
+    await puedeEscribir();
     const orig = Object.fromEntries(original.map(o=>[o.id,o]));
     for(const o of lista){ estado("Stripe: "+o.titulo+"…"); await sincronizarStripe(o, orig[o.id]); }
     estado("Subiendo a GitHub…");
@@ -287,6 +293,7 @@ async function publicar(){
     const t = await gh("/git/trees", {method:"POST", body:JSON.stringify({base_tree:base.tree.sha, tree})});
     const nombres = lista.map(o=>o.titulo).slice(0,5).join(", ");
     const c = await gh("/git/commits", {method:"POST", body:JSON.stringify({message:"Panel: "+nombres, tree:t.sha, parents:[ref.object.sha]})});
+    if(window.PRUEBA_SIN_PUBLICAR){ log("Prueba: commit "+c.sha.slice(0,7)+" creado sin publicar."); return; }
     await gh("/git/refs/heads/"+BRANCH, {method:"PATCH", body:JSON.stringify({sha:c.sha})});
     original = JSON.parse(JSON.stringify(obras)); nuevasFotos = {};
     pintar();
@@ -294,7 +301,7 @@ async function publicar(){
     log("Publicado en GitHub ("+c.sha.slice(0,7)+").","ok");
   }catch(err){
     estado("Error: "+err.message,"err"); log("Error: "+err.message,"err");
-    pintar();
+    pintar(); alert("No se ha publicado.\n\n"+err.message);
   }finally{ $("#b-publicar").disabled=false; $("#b-descartar").disabled=false; }
 }
 $("#b-publicar").onclick = publicar;
@@ -320,7 +327,7 @@ $("#b-guardar-claves").onclick = async ()=>{
   if(!g || !s) return alert("Pega las dos claves.");
   if(s.startsWith("sk_")) return alert("Usa la clave restringida (rk_live_...), no la secreta.");
   GH=g; ST=s;
-  try{ await gh(""); await st("payment_links?limit=1"); }
+  try{ await gh(""); await puedeEscribir(); await st("payment_links?limit=1"); }
   catch(err){ return alert("No funcionan las claves: "+err.message); }
   localStorage.setItem("gh_token",g); localStorage.setItem("stripe_key",s);
   $("#k-gh").value=""; $("#k-st").value=""; iniciar();
