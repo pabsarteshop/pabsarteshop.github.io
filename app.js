@@ -4,7 +4,7 @@ const bg = o => o.foto ? `url(${o.foto})` : o.color;
 $("#y").textContent = new Date().getFullYear();
 
 function pintar(f="todas"){
-  $("#galeria").innerHTML = OBRAS.filter(o=>f==="todas"||o.estado===f).map(o=>`
+  $("#galeria").innerHTML = OBRAS.filter(o=>!o.oculto&&(f==="todas"||o.estado===f)).map(o=>`
     <article class="card ${o.estado}" data-id="${o.id}">
       <div class="img" style="background-image:${bg(o)}">${o.estado==="vendido"?'<span class="tag">Vendido</span>':""}</div>
       <div class="meta"><h3>${o.titulo}</h3><span class="p">${eur(o.precio)}</span></div>

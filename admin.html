@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Panel · Pablo acrílicos</title>
+<style>
+:root{--bg:#0f0f12;--fg:#ececf1;--mute:#9a9aa6;--acc:#4ec9b0;--card:#18181d;--warn:#e0a84e;--err:#e06c6c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif;padding:16px 4vw 120px}
+h1{font-weight:600;font-size:1.4rem;margin:.2em 0 .8em}
+h2{font-size:1.1rem;margin:1.6em 0 .6em}
+input,textarea,select{background:#0b0b0e;color:var(--fg);border:1px solid #333;border-radius:6px;padding:.45em .6em;font:inherit;width:100%}
+textarea{min-height:3.2em;resize:vertical}
+label{display:block;font-size:.8rem;color:var(--mute);margin:.5em 0 .2em}
+button{background:var(--acc);color:#07110f;border:0;border-radius:999px;padding:.55em 1.2em;font:inherit;font-weight:600;cursor:pointer}
+button.sec{background:#2a2a31;color:var(--fg)}
+button:disabled{opacity:.5;cursor:wait}
+.box{background:var(--card);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.obra{background:var(--card);border-radius:10px;overflow:hidden;border:2px solid transparent}
+.obra.cambiada{border-color:var(--warn)}
+.obra.vendido .ft{filter:grayscale(.7) brightness(.6)}
+.obra.oculto{opacity:.55}
+.ft{aspect-ratio:1/1;background:#222 center/cover}
+.cuerpo{padding:10px 12px}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chk{display:flex;gap:.4em;align-items:center;font-size:.85rem;color:var(--mute);margin-top:.6em}
+.chk input{width:auto}
+.peq{font-size:.78rem;color:var(--mute);word-break:break-all}
+#barra{position:fixed;left:0;right:0;bottom:0;background:#0f0f12f2;border-top:1px solid #2a2a31;padding:12px 4vw;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#estado{flex:1;min-width:200px;font-size:.9rem}
+.err{color:var(--err)} .ok{color:var(--acc)}
+#log{white-space:pre-wrap;font-size:.8rem;color:var(--mute);max-height:30vh;overflow:auto}
+#preview{width:120px;aspect-ratio:1/1;background:#222 center/cover;border-radius:6px}
+a{color:var(--acc)}
+</style>
+</head>
+<body>
+<h1>Panel de la tienda</h1>
+
+<div id="claves" class="box" hidden>
+  <h2 style="margin-top:0">Claves de acceso</h2>
+  <p class="peq">Se guardan solo en este navegador. Hazlo una vez por dispositivo.</p>
+  <label>Token de GitHub (github_pat_...)</label>
+  <input id="k-gh" type="password" autocomplete="off">
+  <label>Clave restringida de Stripe (rk_live_...)</label>
+  <input id="k-st" type="password" autocomplete="off">
+  <div class="row" style="margin-top:12px"><button id="b-guardar-claves">Guardar y entrar</button></div>
+</div>
+
+<div id="app" hidden>
+  <div class="box">
+    <h2 style="margin-top:0">Subir un cuadro nuevo</h2>
+    <div class="row" style="align-items:flex-start">
+      <div id="preview"></div>
+      <div style="flex:1;min-width:220px">
+        <label>Foto (cuadrada queda mejor)</label>
+        <input id="n-foto" type="file" accept="image/*">
+        <div class="dos">
+          <div><label>Título</label><input id="n-titulo"></div>
+          <div><label>Precio (€)</label><input id="n-precio" type="number" min="1" step="1" value="100"></div>
+        </div>
+        <label>Descripción</label>
+        <textarea id="n-desc"></textarea>
+        <div class="row" style="margin-top:10px"><button id="b-anadir" class="sec">Añadir a la lista</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <h2 style="flex:1">Cuadros (<span id="cuenta">0</span>)</h2>
+    <button id="b-sync" class="sec">Comprobar ventas en Stripe</button>
+  </div>
+  <div id="lista" class="grid"></div>
+
+  <h2>Registro</h2>
+  <div id="log"></div>
+  <p class="peq" style="margin-top:2em"><a href="#" id="b-olvidar">Olvidar las claves en este navegador</a> · <a href="./" target="_blank">Ver la web</a></p>
+</div>
+
+<div id="barra" hidden>
+  <div id="estado">Sin cambios.</div>
+  <button id="b-descartar" class="sec">Descartar</button>
+  <button id="b-publicar">Guardar y publicar</button>
+</div>
+
+<script>
+const REPO = "pabsarteshop/pabsarteshop.github.io";
+const BRANCH = "main";
+const SITE = "https://pabsarteshop.github.io/";
+const ENVIO = "shr_1Udqzs4DsWkBD6aP7neq5ROd"; // tarifa de envío 12 € España
+const GRACIAS = "Gracias por tu compra. Te escribiré para coordinar el envío.";
+const $ = s => document.querySelector(s);
+let GH = localStorage.getItem("gh_token") || "";
+let ST = localStorage.getItem("stripe_key") || "";
+let original = [], obras = [], cabecera = "", cola = "", nuevasFotos = {};
+
+function log(m, cls){ const d=document.createElement("div"); if(cls) d.className=cls; d.textContent=new Date().toLocaleTimeString()+"  "+m; $("#log").prepend(d); }
+function estado(m, cls){ $("#estado").className=cls||""; $("#estado").textContent=m; }
+
+// ---------- GitHub ----------
+async function gh(path, opts={}){
+  const r = await fetch("https://api.github.com/repos/"+REPO+path, {cache:"no-store", ...opts,
+    headers:{Authorization:"Bearer "+GH, Accept:"application/vnd.github+json", "Content-Type":"application/json"}});
+  const j = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error("GitHub "+r.status+": "+(j.message||""));
+  return j;
+}
+const b64dec = s => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g,"")), c=>c.charCodeAt(0)));
+async function leerArchivo(p){ const j = await gh("/contents/"+p+"?ref="+BRANCH); return b64dec(j.content); }
+
+// ---------- Stripe ----------
+async function st(path, data, method){
+  const body = data ? new URLSearchParams(data).toString() : undefined;
+  const r = await fetch("https://api.stripe.com/v1/"+path, {method: method || (data?"POST":"GET"),
+    headers:{Authorization:"Bearer "+ST, "Content-Type":"application/x-www-form-urlencoded"}, body});
+  const j = await r.json();
+  if(j.error) throw new Error("Stripe: "+j.error.message);
+  return j;
+}
+async function crearEnlace(price, id){
+  return st("payment_links", {
+    "line_items[0][price]": price, "line_items[0][quantity]": "1",
+    "shipping_address_collection[allowed_countries][0]": "ES",
+    "shipping_options[0][shipping_rate]": ENVIO,
+    "phone_number_collection[enabled]": "true",
+    "restrictions[completed_sessions][limit]": "1",
+    "metadata[obra_id]": String(id),
+    "after_completion[type]": "hosted_confirmation",
+    "after_completion[hosted_confirmation][custom_message]": GRACIAS });
+}
+const desactivar = id => id ? st("payment_links/"+id, {active:"false"}) : null;
+const descStripe = o => "Acrílico sobre lienzo, 50x50 cm. " + (o.desc||"");
+
+// ---------- Datos ----------
+function parsear(src){
+  const i = src.indexOf("const OBRAS = [");
+  const ini = src.indexOf("[", i), fin = src.indexOf("\n];", ini);
+  cabecera = src.slice(0, ini); cola = src.slice(fin+1);
+  return JSON.parse(src.slice(ini, fin+1) + "]");
+}
+function serializar(){
+  return cabecera + "[\n" + obras.map(o=>"  "+JSON.stringify(o)).join(",\n") + "\n" + cola;
+}
+async function cargar(){
+  estado("Cargando…");
+  const src = await leerArchivo("obras.js");
+  original = parsear(src);
+  obras = JSON.parse(JSON.stringify(original));
+  nuevasFotos = {};
+  pintar(); estado("Sin cambios."); $("#barra").hidden=false;
+  log("Cargados "+obras.length+" cuadros desde GitHub.");
+}
+function cambios(){
+  const orig = Object.fromEntries(original.map(o=>[o.id,o]));
+  return obras.filter(o => !orig[o.id] || JSON.stringify(o)!==JSON.stringify(orig[o.id]));
+}
+function refrescarBarra(){
+  const n = cambios().length;
+  estado(n ? n+" cuadro(s) con cambios sin publicar." : "Sin cambios.", n?"":"");
+  document.querySelectorAll(".obra").forEach(el=>{
+    const o = obras.find(x=>x.id==el.dataset.id), og = original.find(x=>x.id==el.dataset.id);
+    el.classList.toggle("cambiada", !og || JSON.stringify(o)!==JSON.stringify(og));
+    el.classList.toggle("vendido", o.estado==="vendido");
+    el.classList.toggle("oculto", !!o.oculto);
+  });
+}
+function esc(s){ return String(s??"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function pintar(){
+  $("#cuenta").textContent = obras.length;
+  $("#lista").innerHTML = obras.slice().reverse().map(o=>{
+    const foto = nuevasFotos[o.foto] ? nuevasFotos[o.foto].url : o.foto+"?v="+(o.v||1);
+    return `<div class="obra" data-id="${o.id}">
+      <div class="ft" style="background-image:url('${foto}')"></div>
+      <div class="cuerpo">
+        <div class="dos">
+          <div><label>Título</label><input data-k="titulo" value="${esc(o.titulo)}"></div>
+          <div><label>Precio (€)</label><input data-k="precio" type="number" min="1" step="1" value="${o.precio}"></div>
+        </div>
+        <label>Descripción</label><textarea data-k="desc">${esc(o.desc)}</textarea>
+        <label>Estado</label>
+        <select data-k="estado"><option value="disponible"${o.estado==="disponible"?" selected":""}>Disponible</option><option value="vendido"${o.estado==="vendido"?" selected":""}>Vendido</option></select>
+        <label class="chk"><input type="checkbox" data-k="oculto"${o.oculto?" checked":""}> Ocultar de la web</label>
+        <div class="peq" style="margin-top:.5em">#${o.id} · ${o.pago && o.pago!=="#" ? `<a href="${o.pago}" target="_blank">enlace de pago</a>` : "sin enlace de pago (se crea al publicar)"}</div>
+      </div></div>`;
+  }).join("");
+  refrescarBarra();
+}
+$("#lista").addEventListener("input", e=>{
+  const k = e.target.dataset.k; if(!k) return;
+  const o = obras.find(x=>x.id==e.target.closest(".obra").dataset.id);
+  if(k==="oculto") o.oculto = e.target.checked || undefined;
+  else if(k==="precio") o.precio = Math.round(Number(e.target.value)||0);
+  else o[k] = e.target.value;
+  if(o.oculto===undefined) delete o.oculto;
+  refrescarBarra();
+});
+
+// ---------- Foto nueva ----------
+let fotoPendiente = null;
+async function reducir(file){
+  const img = await createImageBitmap(file, {imageOrientation:"from-image"});
+  const max = 1600, f = Math.min(1, max/Math.max(img.width,img.height));
+  const c = document.createElement("canvas"); c.width=Math.round(img.width*f); c.height=Math.round(img.height*f);
+  c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+  const blob = await new Promise(r=>c.toBlob(r,"image/jpeg",0.85));
+  const b64 = await new Promise(r=>{const fr=new FileReader(); fr.onload=()=>r(fr.result.split(",")[1]); fr.readAsDataURL(blob);});
+  return {b64, url: URL.createObjectURL(blob)};
+}
+$("#n-foto").onchange = async e=>{
+  const f = e.target.files[0]; if(!f) return;
+  try{ fotoPendiente = await reducir(f); $("#preview").style.backgroundImage=`url('${fotoPendiente.url}')`; }
+  catch(err){ fotoPendiente=null; alert("No pude leer esa foto: "+err.message); }
+};
+$("#b-anadir").onclick = ()=>{
+  const titulo = $("#n-titulo").value.trim(), precio = Math.round(Number($("#n-precio").value));
+  if(!fotoPendiente) return alert("Elige una foto.");
+  if(!titulo) return alert("Ponle un título.");
+  if(!(precio>0)) return alert("Pon un precio válido.");
+  const id = Math.max(0, ...obras.map(o=>o.id)) + 1;
+  const foto = "fotos/web/"+String(id).padStart(2,"0")+".jpg";
+  nuevasFotos[foto] = fotoPendiente;
+  obras.push({id, titulo, precio, estado:"disponible", foto, color:"#222", desc:$("#n-desc").value.trim(), pago:"#"});
+  fotoPendiente=null; $("#n-foto").value=""; $("#n-titulo").value=""; $("#n-desc").value=""; $("#preview").style.backgroundImage="";
+  pintar(); log("Añadido \""+titulo+"\" a la lista. Pulsa Guardar y publicar.");
+};
+
+// ---------- Publicar ----------
+async function sincronizarStripe(o, og){
+  const visible = !o.oculto && o.estado==="disponible";
+  const eraVisible = og && !og.oculto && og.estado==="disponible";
+  if(!o.stripe_prod){
+    const p = await st("products", {name:o.titulo, description:descStripe(o), "images[0]":SITE+o.foto,
+      "metadata[obra_id]":String(o.id), "default_price_data[currency]":"eur",
+      "default_price_data[unit_amount]":String(o.precio*100)});
+    o.stripe_prod = p.id; o.stripe_price = p.default_price;
+    log("Stripe: producto creado para \""+o.titulo+"\".");
+  } else if(og && (o.titulo!==og.titulo || o.desc!==og.desc)){
+    await st("products/"+o.stripe_prod, {name:o.titulo, description:descStripe(o)});
+    log("Stripe: título/descripción actualizados en \""+o.titulo+"\".");
+  }
+  let precioNuevo = false;
+  if(og && og.stripe_price && o.precio!==og.precio){
+    const pr = await st("prices", {product:o.stripe_prod, currency:"eur", unit_amount:String(o.precio*100)});
+    await st("products/"+o.stripe_prod, {default_price:pr.id});
+    o.stripe_price = pr.id; precioNuevo = true;
+    log("Stripe: precio de \""+o.titulo+"\" cambiado a "+o.precio+" €.");
+  }
+  if(visible && (!o.stripe_link || precioNuevo || !eraVisible)){
+    const viejo = o.stripe_link;
+    const l = await crearEnlace(o.stripe_price, o.id);
+    o.stripe_link = l.id; o.pago = l.url;
+    if(viejo) await desactivar(viejo).catch(()=>{});
+    log("Stripe: enlace de pago nuevo para \""+o.titulo+"\".");
+  } else if(!visible && eraVisible && o.stripe_link){
+    await desactivar(o.stripe_link);
+    log("Stripe: enlace desactivado para \""+o.titulo+"\" ("+(o.oculto?"oculto":"vendido")+").");
+  }
+}
+async function publicar(){
+  const lista = cambios();
+  if(!lista.length) return estado("No hay cambios que publicar.");
+  for(const o of lista){
+    if(!o.titulo.trim()) return estado("Hay un cuadro sin título.","err");
+    if(!(o.precio>0)) return estado("\""+o.titulo+"\" tiene un precio no válido.","err");
+  }
+  $("#b-publicar").disabled = true; $("#b-descartar").disabled = true;
+  try{
+    const orig = Object.fromEntries(original.map(o=>[o.id,o]));
+    for(const o of lista){ estado("Stripe: "+o.titulo+"…"); await sincronizarStripe(o, orig[o.id]); }
+    estado("Subiendo a GitHub…");
+    const ref = await gh("/git/ref/heads/"+BRANCH);
+    const base = await gh("/git/commits/"+ref.object.sha);
+    const fresco = parsear(await leerArchivo("obras.js"));
+    if(JSON.stringify(fresco)!==JSON.stringify(original)) throw new Error("La web cambió desde que abriste el panel. Recarga la página y repite los cambios.");
+    const idx = (await leerArchivo("index.html")).replace(/obras\.js\?v=\d+/, "obras.js?v="+Date.now());
+    const tree = [
+      {path:"obras.js", mode:"100644", type:"blob", content: serializar()},
+      {path:"index.html", mode:"100644", type:"blob", content: idx}];
+    for(const [p,f] of Object.entries(nuevasFotos)){
+      const b = await gh("/git/blobs", {method:"POST", body:JSON.stringify({content:f.b64, encoding:"base64"})});
+      tree.push({path:p, mode:"100644", type:"blob", sha:b.sha});
+    }
+    const t = await gh("/git/trees", {method:"POST", body:JSON.stringify({base_tree:base.tree.sha, tree})});
+    const nombres = lista.map(o=>o.titulo).slice(0,5).join(", ");
+    const c = await gh("/git/commits", {method:"POST", body:JSON.stringify({message:"Panel: "+nombres, tree:t.sha, parents:[ref.object.sha]})});
+    await gh("/git/refs/heads/"+BRANCH, {method:"PATCH", body:JSON.stringify({sha:c.sha})});
+    original = JSON.parse(JSON.stringify(obras)); nuevasFotos = {};
+    pintar();
+    estado("Publicado. La web se actualiza en 1 o 2 minutos.","ok");
+    log("Publicado en GitHub ("+c.sha.slice(0,7)+").","ok");
+  }catch(err){
+    estado("Error: "+err.message,"err"); log("Error: "+err.message,"err");
+    pintar();
+  }finally{ $("#b-publicar").disabled=false; $("#b-descartar").disabled=false; }
+}
+$("#b-publicar").onclick = publicar;
+$("#b-descartar").onclick = ()=>{ if(confirm("¿Descartar los cambios sin publicar?")) cargar().catch(e=>estado("Error: "+e.message,"err")); };
+
+$("#b-sync").onclick = async ()=>{
+  const b = $("#b-sync"); b.disabled = true; let n = 0;
+  try{
+    for(const o of obras){
+      if(o.estado!=="disponible" || o.oculto || !o.stripe_link) continue;
+      const l = await st("payment_links/"+o.stripe_link);
+      if(!l.active){ o.estado="vendido"; n++; log("\""+o.titulo+"\" se ha vendido en Stripe. Marcado como vendido."); }
+    }
+    pintar();
+    estado(n ? n+" venta(s) encontradas. Pulsa Guardar y publicar." : "No hay ventas nuevas.", n?"":"ok");
+  }catch(err){ estado("Error: "+err.message,"err"); }
+  finally{ b.disabled=false; }
+};
+
+// ---------- Claves ----------
+$("#b-guardar-claves").onclick = async ()=>{
+  const g = $("#k-gh").value.trim(), s = $("#k-st").value.trim();
+  if(!g || !s) return alert("Pega las dos claves.");
+  if(s.startsWith("sk_")) return alert("Usa la clave restringida (rk_live_...), no la secreta.");
+  GH=g; ST=s;
+  try{ await gh(""); await st("payment_links?limit=1"); }
+  catch(err){ return alert("No funcionan las claves: "+err.message); }
+  localStorage.setItem("gh_token",g); localStorage.setItem("stripe_key",s);
+  $("#k-gh").value=""; $("#k-st").value=""; iniciar();
+};
+$("#b-olvidar").onclick = e=>{ e.preventDefault(); if(!confirm("¿Borrar las claves de este navegador?")) return;
+  localStorage.removeItem("gh_token"); localStorage.removeItem("stripe_key"); location.reload(); };
+window.addEventListener("beforeunload", e=>{ if(cambios().length){ e.preventDefault(); e.returnValue=""; } });
+
+function iniciar(){
+  if(!GH || !ST){ $("#claves").hidden=false; $("#app").hidden=true; return; }
+  $("#claves").hidden=true; $("#app").hidden=false;
+  cargar().catch(err=>{ estado("Error: "+err.message,"err"); log("Error: "+err.message,"err"); $("#barra").hidden=false; });
+}
+iniciar();
+</script>
+</body>
+</html>
